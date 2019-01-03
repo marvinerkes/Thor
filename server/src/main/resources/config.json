@@ -1,0 +1,15 @@
+{
+  "host": "localhost",
+  "port": 1337,
+  "backlog": 50,
+  "debug": true,
+  "workerThreads": 4,
+  "cluster": [
+    {
+      "host": "localhost",
+      "port": 1338
+    }
+  ],
+  "cleanupInterval": 300,
+  "snapshotInterval": -1
+}
