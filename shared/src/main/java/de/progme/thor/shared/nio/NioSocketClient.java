@@ -48,6 +48,8 @@ public abstract class NioSocketClient extends SimpleChannelInboundHandler<JSONOb
 
     private List<ClusterServer> clusterServers = new ArrayList<>();
 
+    private EventLoopGroup eventLoopGroup;
+
     private Channel channel;
 
     private boolean connected;
@@ -97,8 +99,9 @@ public abstract class NioSocketClient extends SimpleChannelInboundHandler<JSONOb
 
     public boolean connect(String host, int port) {
 
+        eventLoopGroup = PipelineUtils.newEventLoopGroup(1);
         ChannelFuture channelFuture = new Bootstrap()
-                .group(PipelineUtils.newEventLoopGroup(1))
+                .group(eventLoopGroup)
                 .channel(PipelineUtils.getChannel())
                 .handler(new ClientChannelInitializer(this))
                 .option(ChannelOption.TCP_NODELAY, true)
@@ -138,7 +141,6 @@ public abstract class NioSocketClient extends SimpleChannelInboundHandler<JSONOb
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-
         reconnect();
     }
 
@@ -209,6 +211,13 @@ public abstract class NioSocketClient extends SimpleChannelInboundHandler<JSONOb
             connected = false;
 
             channel.close();
+            if (force) {
+                try {
+                    eventLoopGroup.shutdownGracefully().sync();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
             if (!force) {
                 reconnect();
